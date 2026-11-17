@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>人设与额度面板</title>
+  <script src="/preload.js"></script>
+  <style>
+    /*
+     * Use --ph-* prefix for all local variables so preload.js's host CSS tokens
+     * (such as --muted, which is a background surface color in the host!) never
+     * collide with our text color variables.
+     */
+    :root {
+      --ph-bg: var(--background, #f8fafc);
+      --ph-card: var(--card, #ffffff);
+      --ph-surface: color-mix(in srgb, var(--foreground, #0f172a) 6%, var(--card, #ffffff));
+      --ph-border: color-mix(in srgb, var(--foreground, #0f172a) 12%, transparent);
+      --ph-text: var(--foreground, #0f172a);
+      --ph-subtext: color-mix(in srgb, var(--foreground, #0f172a) 72%, transparent);
+      --ph-faint: color-mix(in srgb, var(--foreground, #0f172a) 52%, transparent);
+      --ph-primary: var(--primary, #6366f1);
+      --ph-primary-soft: color-mix(in srgb, var(--ph-primary) 15%, transparent);
+      --ph-emerald: #10b981;
+      --ph-emerald-soft: rgba(16, 185, 129, 0.16);
+      --ph-amber: #f59e0b;
+      --ph-amber-soft: rgba(245, 158, 11, 0.16);
+      --ph-rose: #f43f5e;
+      --ph-rose-soft: rgba(244, 63, 94, 0.16);
+      --ph-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      background: var(--ph-bg);
+      color: var(--ph-text);
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px;
+    }
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--ph-text);
+    }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ph-subtext);
+      background: var(--ph-card);
+      border: 1px solid var(--ph-border);
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ph-emerald);
+      box-shadow: 0 0 6px var(--ph-emerald);
+    }
+    .card {
+      background: var(--ph-card);
+      border: 1px solid var(--ph-border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--ph-shadow);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--ph-subtext);
+    }
+    .alert-banner {
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      background: var(--ph-amber-soft);
+      color: var(--ph-text);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .persona-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .avatar-ring {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 2px solid var(--ph-primary);
+      flex-shrink: 0;
+      background: var(--ph-surface);
+    }
+    .persona-title-area {
+      flex: 1;
+      min-width: 0;
+    }
+    .persona-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .persona-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--ph-text);
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .tag-active { background: var(--ph-emerald-soft); color: var(--ph-emerald); }
+    .tag-preview { background: var(--ph-primary-soft); color: var(--ph-text); }
+    .tag-none { background: var(--ph-surface); color: var(--ph-subtext); }
+    .tag-rose { background: var(--ph-rose-soft); color: var(--ph-rose); }
+    .tag-amber { background: var(--ph-amber-soft); color: var(--ph-amber); }
+
+    .status-badge {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 11.5px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--ph-primary-soft);
+      color: var(--ph-text);
+      font-weight: 500;
+    }
+    .status-badge.rose { background: var(--ph-rose-soft); color: var(--ph-rose); }
+    .status-badge.emerald { background: var(--ph-emerald-soft); color: var(--ph-emerald); }
+    .status-badge.amber { background: var(--ph-amber-soft); color: var(--ph-amber); }
+
+    .persona-desc {
+      font-size: 12.5px;
+      color: var(--ph-subtext);
+      margin: 8px 0 12px;
+    }
+
+    .view-switcher {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      background: var(--ph-surface);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--ph-border);
+    }
+    .view-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--ph-subtext);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 8px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .view-btn:hover {
+      color: var(--ph-text);
+    }
+    .view-btn.active {
+      background: var(--ph-card);
+      color: var(--ph-text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Clean frameless portrait with no ugly gray sidebars */
+    .portrait-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin: 4px 0 2px;
+    }
+    .portrait-img {
+      width: auto;
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 14px;
+      border: 1px solid var(--ph-border);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      display: block;
+    }
+
+    .prompts-list {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .prompt-btn {
+      text-align: left;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--ph-border);
+      background: var(--ph-surface);
+      color: var(--ph-text);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .prompt-btn:hover {
+      border-color: var(--ph-primary);
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .roster-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--ph-border);
+      background: var(--ph-surface);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .roster-item.selected {
+      border-color: var(--ph-primary);
+      background: var(--ph-primary-soft);
+    }
+    .roster-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      object-fit: cover;
+      margin-bottom: 6px;
+      background: var(--ph-card);
+    }
+    .roster-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ph-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .roster-state {
+      font-size: 11px;
+      color: var(--ph-subtext);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    .roster-state.on {
+      color: var(--ph-emerald);
+      font-weight: 700;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .metric-box {
+      background: var(--ph-surface);
+      border: 1px solid var(--ph-border);
+      border-radius: 10px;
+      padding: 9px 11px;
+    }
+    .metric-label {
+      font-size: 11.5px;
+      color: var(--ph-subtext);
+      font-weight: 500;
+    }
+    .metric-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ph-text);
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-wrap {
+      margin-top: 6px;
+    }
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ph-subtext);
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--ph-surface);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--ph-primary);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .bar-fill.emerald { background: var(--ph-emerald); }
+    .bar-fill.amber { background: var(--ph-amber); }
+    .bar-fill.rose { background: var(--ph-rose); }
+
+    .fallback-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      background: var(--ph-surface);
+      border: 1px dashed var(--ph-border);
+      font-size: 12.5px;
+      color: var(--ph-subtext);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ph-text);
+      color: var(--ph-bg);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Top Header -->
+    <div class="topbar">
+      <div class="title-wrap">
+        <span>✨ 人设与额度中控台</span>
+      </div>
+      <button id="refresh-btn" class="live-pill" title="点击立即刷新状态">
+        <span class="live-dot"></span>
+        <span id="sync-text">实时同步中</span>
+      </button>
+    </div>
+
+    <!-- Section 1: Active Persona / Preview Showcase -->
+    <div class="card" id="persona-card">
+      <div class="section-header">
+        <span class="section-title" id="persona-section-label">当前激活人设</span>
+        <span id="active-summary-pill" class="tag tag-none">检测中...</span>
+      </div>
+      <div id="conflict-banner" class="alert-banner" style="display:none;"></div>
+      <div id="persona-content"></div>
+    </div>
+
+    <!-- Section 2: Installed Persona Roster -->
+    <div class="card">
+      <div class="section-header">
+        <span class="section-title">已安装人设图鉴（点击可预览形象）</span>
+      </div>
+      <div id="roster-container" class="roster-grid"></div>
+    </div>
+
+    <!-- Section 3: Session & Local Quota / Usage Telemetry -->
+    <div class="card">
+      <div class="section-header">
+        <span class="section-title">会话模型与调用统计</span>
+        <span id="model-badge" class="tag tag-preview">Gemini</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">当前会话步数 / 提问轮数</div>
+          <div class="metric-val" id="m-conv-steps">0 / 0 轮</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">今日总步数 / 生图调用</div>
+          <div class="metric-val" id="m-today-steps">0 步 / 0 图</div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-top">
+          <span>当前对话上下文负载 (<span id="ctx-kb">0 KB</span>)</span>
+          <span id="ctx-pct">0%</span>
+        </div>
+        <div class="bar-track">
+          <div id="ctx-bar" class="bar-fill emerald" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">已复制到剪贴板</div>
+
+  <script>
+    let selectedPersonaId = null;
+    let selectedImageMode = 'realistic'; // 'realistic' | 'secondary'
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1800);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function renderPersonaSection(personasData) {
+      const { mode, activePersonas, allPersonas } = personasData;
+      const summaryPill = document.getElementById('active-summary-pill');
+      const conflictBanner = document.getElementById('conflict-banner');
+      const contentEl = document.getElementById('persona-content');
+      const sectionLabel = document.getElementById('persona-section-label');
+
+      if (mode === 'conflict') {
+        conflictBanner.style.display = 'block';
+        conflictBanner.innerHTML = `⚠️ 当前同时开启了 <b>${activePersonas.length}</b> 个人设插件（${activePersonas.map(p => escapeHtml(p.displayName)).join('、')}），建议在 Customizations 中仅保留一个以避免风格冲突。`;
+      } else {
+        conflictBanner.style.display = 'none';
+      }
+
+      const defaultActive = activePersonas[0] || null;
+      let target = null;
+      if (selectedPersonaId) {
+        target = allPersonas.find(p => p.id === selectedPersonaId) || defaultActive;
+      } else {
+        target = defaultActive;
+      }
+
+      if (mode === 'none') {
+        summaryPill.className = 'tag tag-none';
+        summaryPill.textContent = '未激活人设 · 标准模式';
+      } else if (mode === 'single') {
+        summaryPill.className = 'tag tag-active';
+        summaryPill.textContent = `当前启用：${defaultActive.displayName.split(' ')[0]}`;
+      } else {
+        summaryPill.className = 'tag tag-amber';
+        summaryPill.textContent = `${activePersonas.length} 个人设同时启用`;
+      }
+
+      if (!target) {
+        sectionLabel.textContent = '当前运行状态';
+        contentEl.innerHTML = `
+          <div class="fallback-box">
+            <div style="font-size:24px;line-height:1;">🌟</div>
+            <div>
+              <div style="font-weight:700;color:var(--ph-text);margin-bottom:3px;">当前未激活任何专属人设插件（默认助手模式）</div>
+              <div>目前以 Antigravity 标准助手身份运行中。你可以点击下方「已安装人设图鉴」预览已安装人设的形象，或在 Customizations 面板中开启她们~</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const isPreviewingInactive = !target.enabled;
+      sectionLabel.textContent = isPreviewingInactive ? '人设图鉴预览（当前未启用）' : '当前激活人设';
+
+      const hasSecondary = Boolean(target.secondaryUrl);
+      const showSecondary = hasSecondary && selectedImageMode === 'secondary';
+      const currentImgUrl = showSecondary ? target.secondaryUrl : (target.realisticUrl || target.logoUrl);
+
+      const badgeTone = target.badge?.tone || 'indigo';
+      const promptsHtml = (target.suggestedPrompts || []).map(p =>
+        `<button class="prompt-btn" data-prompt="${escapeHtml(p)}" title="点击复制唤醒词">💬 “${escapeHtml(p)}”</button>`
+      ).join('');
+
+      contentEl.innerHTML = `
+        <div class="persona-header">
+          ${target.logoUrl ? `<img class="avatar-ring" src="${target.logoUrl}" alt="${escapeHtml(target.displayName)}" />` : ''}
+          <div class="persona-title-area">
+            <div class="persona-name-row">
+              <h2 class="persona-name">${escapeHtml(target.displayName)}</h2>
+              <span class="tag ${target.enabled ? 'tag-active' : 'tag-preview'}">${target.enabled ? '● 正在使用' : '○ 预览中 (未启用)'}</span>
+            </div>
+            ${target.badge ? `<div class="status-badge ${badgeTone}">${escapeHtml(target.badge.text)}</div>` : ''}
+          </div>
+        </div>
+        <div class="persona-desc">${escapeHtml(target.description)}</div>
+        ${hasSecondary ? `
+          <div class="view-switcher">
+            <button class="view-btn ${!showSecondary ? 'active' : ''}" data-imgmode="realistic">📸 ${escapeHtml(target.realisticLabel || '写实形象 (默认)')}</button>
+            <button class="view-btn ${showSecondary ? 'active' : ''}" data-imgmode="secondary">🎨 ${escapeHtml(target.secondaryLabel || '二次元形象')}</button>
+          </div>
+        ` : ''}
+        ${currentImgUrl ? `
+          <div class="portrait-wrap">
+            <img class="portrait-img" src="${currentImgUrl}" alt="${escapeHtml(target.displayName)}" />
+          </div>
+        ` : ''}
+        ${promptsHtml ? `<div class="prompts-list">${promptsHtml}</div>` : ''}
+      `;
+
+      contentEl.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedImageMode = btn.getAttribute('data-imgmode');
+          renderPersonaSection(personasData);
+        });
+      });
+
+      contentEl.querySelectorAll('.prompt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const text = btn.getAttribute('data-prompt');
+          navigator.clipboard?.writeText(text);
+          showToast('已复制唤醒词到剪贴板 ✨');
+        });
+      });
+    }
+
+    function renderRoster(personasData) {
+      const container = document.getElementById('roster-container');
+      const { allPersonas, activePersonas } = personasData;
+      if (!allPersonas || allPersonas.length === 0) {
+        container.innerHTML = `<div class="fallback-box" style="grid-column:span 3;">暂未检测到已安装的 *-persona 插件</div>`;
+        return;
+      }
+
+      const currentTargetId = selectedPersonaId || (activePersonas[0]?.id ?? null);
+
+      container.innerHTML = allPersonas.map(p => {
+        const shortName = p.displayName.split(' ')[0];
+        const isSel = p.id === currentTargetId;
+        return `
+          <div class="roster-item ${isSel ? 'selected' : ''}" data-id="${escapeHtml(p.id)}">
+            ${p.logoUrl ? `<img class="roster-avatar" src="${p.logoUrl}" alt="${escapeHtml(shortName)}" />` : `<div class="roster-avatar"></div>`}
+            <div class="roster-name">${escapeHtml(shortName)}</div>
+            <div class="roster-state ${p.enabled ? 'on' : ''}">${p.enabled ? '● 已激活' : '未激活'}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.roster-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const clickedId = item.getAttribute('data-id');
+          if (selectedPersonaId === clickedId) {
+            selectedPersonaId = null;
+          } else {
+            selectedPersonaId = clickedId;
+          }
+          renderPersonaSection(personasData);
+          renderRoster(personasData);
+        });
+      });
+    }
+
+    function renderUsage(usage) {
+      let modelName = usage.currentModel || 'Gemini (默认)';
+      if (/comment on this change/i.test(modelName)) {
+        modelName = 'Gemini 4 Argon (Medium)';
+      }
+      document.getElementById('model-badge').textContent = `当前模型：${modelName}`;
+      document.getElementById('m-conv-steps').textContent = `${usage.convSteps || 0} 步 / ${usage.convUserTurns || 0} 轮`;
+      document.getElementById('m-today-steps').textContent = `${usage.todaySteps || 0} 步 / ${usage.todayImages || 0} 图`;
+      document.getElementById('ctx-kb').textContent = `${usage.convContextKB || 0} KB`;
+      const pct = usage.contextLoadPct || 0;
+      document.getElementById('ctx-pct').textContent = `${pct}%`;
+      const bar = document.getElementById('ctx-bar');
+      bar.style.width = `${pct}%`;
+      bar.className = 'bar-fill ' + (pct >= 85 ? 'rose' : pct >= 60 ? 'amber' : 'emerald');
+    }
+
+    async function refresh() {
+      const syncText = document.getElementById('sync-text');
+      syncText.textContent = '同步中...';
+      try {
+        const res = await fetch('/api/status', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.personas && Array.isArray(data.personas.allPersonas)) {
+          data.personas.allPersonas = data.personas.allPersonas.filter(p => p.id !== 'persona-hub' && p.id.endsWith('-persona'));
+          data.personas.activePersonas = data.personas.allPersonas.filter(p => p.enabled);
+          data.personas.activeCount = data.personas.activePersonas.length;
+          data.personas.mode = data.personas.activeCount === 0 ? 'none' : (data.personas.activeCount === 1 ? 'single' : 'conflict');
+        }
+        renderPersonaSection(data.personas);
+        renderRoster(data.personas);
+        renderUsage(data.usage);
+        syncText.textContent = '实时同步中';
+      } catch (err) {
+        syncText.textContent = '重连中...';
+      }
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', () => refresh());
+
+    refresh();
+    setInterval(() => refresh(), 5000);
+  </script>
+</body>
+</html>

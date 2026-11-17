@@ -1,0 +1,8 @@
+{
+  "name": "persona-hub",
+  "displayName": "人设与额度中控台 (Persona Hub)",
+  "description": "侧边栏实时展示当前激活的人设形象（支持写实/二次元切换与无激活人设容错）以及当前会话模型与上下文负载统计。",
+  "logo": "assets/logo.svg",
+  "version": "1.0.1",
+  "repository": "https://github.com/liqiming-whu/antigravity-plugins"
+}
