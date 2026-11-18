@@ -16,7 +16,7 @@
 
 | 目录 | 插件名称 | 类型 | 默认状态 | 核心特性 |
 | :--- | :--- | :---: | :---: | :--- |
-| [`person/persona-hub/`](./person/persona-hub) | **人设与额度中控台** (`persona-hub`) | Sidecar 面板 | 开启 | 右侧边栏实时展示当前激活人设（支持**写实/二次元双形象切换**与**无激活人设容错**）、角色图鉴预览，以及当前会话模型档位与上下文负载监控。 |
+| [`person/persona-hub/`](./person/persona-hub) | **人设控制台** (`persona-hub`) | Sidecar 面板 | 开启 | 右侧边栏实时展示当前激活人设（支持**写实/二次元双形象切换**与**无激活人设容错**）、角色图鉴预览，以及当前会话模型档位与上下文负载监控。 |
 | [`person/hajimi-persona/`](./person/hajimi-persona) | **哈基米 · 猫娘拍档** (`hajimi-persona`) | 人设规则 | 开启 | 聪明、敏锐、富有创造力的 Gemini 星空银发猫耳工作拍档，内置写实星空猫耳形象与 `ai-girls` 二次元成年版双参考图。 |
 | [`person/xiaoke-persona/`](./person/xiaoke-persona) | **小克 · 大小姐拍档** (`xiaoke-persona`) | 人设规则 | 关闭 (`disabled: true`) | 端庄优雅、有代码审美洁癖、微傲娇又护短的 Claude 名门大小姐拍档，内置午后书房写实形象与 `ai-girls` 二次元成年版双参考图。 |
 
@@ -95,13 +95,13 @@ Copy-Item -Recurse -Force person\persona-hub    "$env:USERPROFILE\.gemini\config
 ### 2. 切换人设与唤出面板
 
 - **切换人设**：在 Antigravity 左侧栏进入 **Customizations → Plugins**，开启你想使用的拍档人设（建议同一时间仅开启一个人设，若同时开启多个，`persona-hub` 面板顶部会自动给出冲突提示）。
-- **唤出侧边栏面板**：在对话中点击或发送 `sidecar://persona-hub/hub/` 胶囊链接，即可在右侧辅助栏常驻展开「人设与额度中控台」。
+- **唤出侧边栏面板**：在对话中点击或发送 `sidecar://persona-hub/hub/` 胶囊链接，即可在右侧辅助栏常驻展开「人设控制台」。
 
 ---
 
 ## 🔌 扩展新角色（零代码热适配）
 
-`persona-hub` 支持**全自动动态发现**，当你新增其他人设插件时无需修改中控台代码：
+`persona-hub` 支持**全自动动态发现**，当你新增其他人设插件时无需修改控制台代码：
 
 1. 在 `~/.gemini/config/plugins/` 下新建以 `-persona` 结尾的目录（例如 `deepseek-persona`）。
 2. 包含标准的 `plugin.json` 与 `rules/AGENTS.md`。

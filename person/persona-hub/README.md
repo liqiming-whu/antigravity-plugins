@@ -1,4 +1,4 @@
-# 人设与额度中控台 (Persona Hub)
+# 人设控制台 (Persona Hub)
 
 Antigravity 侧边栏（Auxiliary Pane）实时人设与会话状态面板插件。
 
